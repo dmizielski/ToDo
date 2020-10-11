@@ -1,40 +1,45 @@
 import json
 import os
-from counter import readFile, incValue
+import counter
 
 PATH = "C:/Users/xsemi/PycharmProjects/newProject/todo.json"
 FILE = "todo.json"
+NO_FILE = 'File doesnt exists'
 INVALID_INPUT = "Your input doesn't make any sense. Insert data again."
+EMPTY_INPUT = 'You have to type something!'
 EMPTY_FILE = "File is empty!"
 INVALID_ID = "Task with this id doesn't exist!"
 WRONG = "Something went wrong!"
 
 
-def insertData():
-    valid_data = False
-    while not valid_data:
-        title = str(input("Title: "))
-        desc = str(input("Description: "))
-        if title.isdigit() or desc.isdigit():
-            print(f"{INVALID_INPUT}")
-        addTodo(title, desc)
-        valid_data = True
+def getTitle():
+    title = ''
+    while not title and not title.strip():
+        title = input("Title: ")
+    return title
 
 
-def addTodo(title, description):
-    id = int(readFile())
-    if os.path.exists(PATH):
-        help_dict = getJson(PATH)
+def getDesc():
+    desc = ''
+    while not desc and not desc.strip():
+        desc = input("Description: ")
+    return desc
+
+
+def addTodo(title=getTitle(), description=getDesc(), path=PATH):
+    id = int(counter.readFile())
+    if os.path.exists(path):
+        help_dict = getJson(path)
         help_dict[id] = {'Title': title, 'Description': description}
         with open(FILE, 'w') as pfile:
             json.dump(help_dict, pfile)
-            incValue()
+            counter.incValue()
     else:
         todo_dict = {'Title': title, 'Description': description}
         help_dict = {id: todo_dict}
         with open(FILE, 'w') as pfile:
             json.dump(help_dict, pfile)
-            incValue()
+            counter.incValue()
 
 
 def removeTodo(path=PATH):
@@ -57,18 +62,6 @@ def removeTodo(path=PATH):
         print(f'{INVALID_ID}')
         return 0
     updateJson(remove_dict, path)
-
-
-def checkIfFileExists(path=PATH):
-    if os.path.exists(path):
-        return True
-    return False
-
-
-def checkIfFileIsEmpty(path=PATH):
-    if os.stat(path).st_size == 0:
-        return True
-    return False
 
 
 def editTodo(path=PATH):
@@ -105,6 +98,17 @@ def showTodo(path=PATH):
         print("-------------")
     return dictionary
 
+
+def checkIfFileExists(path=PATH):
+    if os.path.exists(path):
+        return True
+    return False
+
+
+def checkIfFileIsEmpty(path=PATH):
+    if os.stat(path).st_size == 0:
+        return True
+    return False
 
 def updateJson(helpDict, path=PATH):
     with open(path, 'w') as pfile:

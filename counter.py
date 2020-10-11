@@ -1,21 +1,23 @@
 import json
 import os
 
+PATH = 'counter.json'
+
 
 class Counter:
     count = 0
 
 
-def readFile():
-    if not os.path.exists('counter.json'):
-        with open('counter.json', 'w') as pfile:
+def readFile(path=PATH):
+    if not os.path.exists(path):
+        with open(path, 'w') as pfile:
             json.dump(Counter.count, pfile)
-    with open('counter.json', 'r') as pfile:
+    with open(path, 'r') as pfile:
         Counter.count = json.load(pfile)
-    return Counter.count
+    return int(Counter.count)
 
 
-def incValue():
+def incValue(path=PATH):
     Counter.count += 1
-    with open('counter.json', 'w') as pfile:
+    with open(path, 'w') as pfile:
         json.dump(Counter.count, pfile)
