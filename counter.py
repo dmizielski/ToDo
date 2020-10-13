@@ -8,7 +8,7 @@ class Counter:
     count = 0
 
 
-def readFile(path=PATH):
+def readFile(path):
     if not os.path.exists(path):
         with open(path, 'w') as pfile:
             json.dump(Counter.count, pfile)
@@ -17,7 +17,7 @@ def readFile(path=PATH):
     return int(Counter.count)
 
 
-def incValue(path=PATH):
+def incValue(path):
     Counter.count += 1
     with open(path, 'w') as pfile:
         json.dump(Counter.count, pfile)

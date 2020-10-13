@@ -2,12 +2,13 @@ from unittest.mock import patch
 from unittest import mock
 import unittest
 import os
+import copy
 
 from source import showTodo, editTodo, removeTodo, \
     addTodo, checkIfFileIsEmpty, checkIfFileExists, \
-    getJson, getTitle, getDesc
+    getJson, getTitle, getDesc, updateJson
 
-from counter import readFile, incValue
+from counter import Counter, readFile, incValue
 
 FILE = 'fixtures/todo.json'
 NEW_FILE = 'fixtures/new_todo.json'
@@ -65,14 +66,21 @@ class TestGetData(unittest.TestCase):
 
 
 class TestAddTask(unittest.TestCase):
-    @mock.patch('source.addTodo', create=True)
-    def test_add_todo_no_file(self, mocked_input):
+    def test_add_todo_no_file(self):
         """
         Tests if task is added when file doesnt exists
         :return:
         Dict
         """
-        addTodo()
+        title_test = 'Test title no file'
+        desc_test = 'Test description no file'
+        id_test = readFile(COUNTER)
+        new_dict = {str(id_test): {'Title': title_test, 'Description': desc_test}}
+        addTodo(title_test, desc_test, NEW_FILE, COUNTER)
+        help_dict = getJson(NEW_FILE)
+        os.remove(NEW_FILE)
+        updateJson(1, COUNTER)
+        self.assertDictEqual(help_dict, new_dict)
 
     def test_add_todo(self):
         """
@@ -80,7 +88,18 @@ class TestAddTask(unittest.TestCase):
         :return:
         Dict
         """
-        pass
+        title_test = 'Test title file'
+        desc_test = 'Test description file'
+        id_task = readFile(COUNTER)
+        new_dict = {"0": {"Title": "opjdaspjoao", "Description": "sdaiosdjopdias"},
+                    str(id_task): {"Title": title_test, "Description": desc_test}}
+        addTodo(title_test, desc_test, FILE, COUNTER)
+        help_dict = getJson(FILE)
+        result_dict = copy.deepcopy(help_dict)
+        help_dict.pop(str(id_task))
+        updateJson(help_dict, FILE)
+        updateJson(1, COUNTER)
+        self.assertDictEqual(result_dict, new_dict)
 
 
 class TestShowTodo(unittest.TestCase):
@@ -108,32 +127,33 @@ class TestShowTodo(unittest.TestCase):
         :return:
         Dict
         """
-        file_dict = {"0": {"Title": "opjdaspjoao", "Description": "sdaiosdjopdias"},
-                     "1": {"Title": "asdphasdi", "Description": "daohasdip"}}
+        file_dict = {"0": {"Title": "opjdaspjoao", "Description": "sdaiosdjopdias"}}
         result = showTodo(FILE)
         self.assertDictEqual(result, file_dict)
 
 
 class TestEditTodo(unittest.TestCase):
+    @patch('builtins.input', return_value='0')
     def test_edit_todo(self):
         """
         Test that user can edit specified task
         :return:
         Dict
         """
-        help_dict = getJson(EDITED_FILE)
+        help_dict = getJson(FILE)
+        backup_dict = copy.deepcopy(help_dict)
         editTodo(FILE)
         result = getJson(FILE)
         self.assertDictEqual(result, help_dict)
 
-    def test_edit_invalid_id_todo(self):
+    @patch('builtins.input', return_value='123123')
+    def test_edit_invalid_id_todo(self, input):
         """
         Test that user cant edit record which doesnt exists
         :return:
         0
         """
-        result = editTodo(FILE)
-        self.assertEqual(result, 0)
+        self.assertEqual(editTodo(), 0)
 
 
 class TestRemoveTodo(unittest.TestCase):

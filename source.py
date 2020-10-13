@@ -3,7 +3,7 @@ import os
 import counter
 
 PATH = "C:/Users/xsemi/PycharmProjects/newProject/todo.json"
-FILE = "todo.json"
+COUNTER_FILE = 'counter.json'
 NO_FILE = 'File doesnt exists'
 INVALID_INPUT = "Your input doesn't make any sense. Insert data again."
 EMPTY_INPUT = 'You have to type something!'
@@ -26,28 +26,32 @@ def getDesc():
     return desc
 
 
-def addTodo(title=getTitle(), description=getDesc(), path=PATH):
-    id = int(counter.readFile())
+def getId():
+    id_task = ''
+    while not id_task and not id_task.strip():
+        id_task = input("Task id: ")
+    return id_task
+
+
+def addTodo(title=getTitle(), description=getDesc(), path=PATH, path_counter=COUNTER_FILE):
+    id_task = counter.readFile(path_counter)
     if os.path.exists(path):
         help_dict = getJson(path)
-        help_dict[id] = {'Title': title, 'Description': description}
-        with open(FILE, 'w') as pfile:
+        help_dict[id_task] = {'Title': title, 'Description': description}
+        with open(path, 'w') as pfile:
             json.dump(help_dict, pfile)
-            counter.incValue()
+            counter.incValue(path_counter)
     else:
-        todo_dict = {'Title': title, 'Description': description}
-        help_dict = {id: todo_dict}
-        with open(FILE, 'w') as pfile:
-            json.dump(help_dict, pfile)
-            counter.incValue()
+        todo_dict = {id_task: {'Title': title, 'Description': description}}
+        with open(path, 'w') as pfile:
+            json.dump(todo_dict, pfile)
+            counter.incValue(path_counter)
 
 
 def removeTodo(path=PATH):
     if not checkIfFileExists():
-        print(f'File doesnt exists!')
         return 0
     if checkIfFileIsEmpty():
-        print(f'{EMPTY_FILE}')
         return 0
     remove_dict = getJson(path)
     if not bool(remove_dict):
@@ -64,22 +68,21 @@ def removeTodo(path=PATH):
     updateJson(remove_dict, path)
 
 
-def editTodo(path=PATH):
+def editTodo(title='', desc='', path=PATH):
     if not checkIfFileExists():
-        print(f'File doesnt exists!')
         return 0
     if checkIfFileIsEmpty():
-        print(f'{EMPTY_FILE}')
         return 0
     update_dict = getJson(path)
     if not bool(update_dict):
         print('Dict is empty! You have to insert data!')
         return 0
     showTodo()
-    task_id = str(input("Which task you want to modify?\n"))
+    task_id = getId()
     if task_id in update_dict:
-        title = str(input("Title: "))
-        desc = str(input("Description: "))
+        if not bool(title) and not bool(desc):
+            title = getTitle()
+            desc = getDesc()
         update_dict[task_id] = {'Title': title, 'Description': desc}
     else:
         print(f'{INVALID_ID}')
@@ -88,8 +91,10 @@ def editTodo(path=PATH):
 
 
 def showTodo(path=PATH):
-    checkIfFileExists()
-    checkIfFileIsEmpty()
+    if not checkIfFileExists():
+        return 0
+    if checkIfFileIsEmpty():
+        return 0
     dictionary = getJson(path)
     for key, value in dictionary.items():
         print(f"ID: {key}")
@@ -102,13 +107,16 @@ def showTodo(path=PATH):
 def checkIfFileExists(path=PATH):
     if os.path.exists(path):
         return True
+    print(f'File doesnt exists!')
     return False
 
 
 def checkIfFileIsEmpty(path=PATH):
     if os.stat(path).st_size == 0:
         return True
+    print(f'{EMPTY_FILE}')
     return False
+
 
 def updateJson(helpDict, path=PATH):
     with open(path, 'w') as pfile:
