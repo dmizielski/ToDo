@@ -1,14 +1,13 @@
 from unittest.mock import patch
-from unittest import mock
 import unittest
 import os
 import copy
 
 from source import showTodo, editTodo, removeTodo, \
     addTodo, checkIfFileIsEmpty, checkIfFileExists, \
-    getJson, getTitle, getDesc, updateJson
+    getJson, getTitle, getDesc, updateJson, getId
 
-from counter import Counter, readFile, incValue
+from counter import readFile, incValue
 
 FILE = 'fixtures/todo.json'
 NEW_FILE = 'fixtures/new_todo.json'
@@ -17,10 +16,13 @@ EMPTY_FILE = 'fixtures/empty.json'
 EDITED_FILE = 'fixtures/edited_todo.json'
 DELETED_FILE = 'fixtures/removed_todo.json'
 COUNTER = 'fixtures/counter.json'
+TEST_ID = '0'
+INVALID_ID = '191881989'
+TEST_STRING = 'test0'
 
 
 class TestCounter(unittest.TestCase):
-    def test_read_counter(self):
+    def test_A_read_counter(self):
         """
         Test if function read value from 'counter.json' and if file doesn't
         exists, it creates it
@@ -29,9 +31,9 @@ class TestCounter(unittest.TestCase):
         """
         counter_value = readFile(COUNTER)
         os.remove(COUNTER)
-        self.assertEqual(counter_value, 0)
+        self.assertEqual(counter_value, 1)
 
-    def test_inc_counter(self):
+    def test_B_inc_counter(self):
         """
         Tests if function increases value by 1 in 'counter.json'
         :return:
@@ -40,11 +42,12 @@ class TestCounter(unittest.TestCase):
         current_value = readFile(COUNTER) + 1
         incValue(COUNTER)
         after_inc = readFile(COUNTER)
+        os.remove(COUNTER)
         self.assertEqual(current_value, after_inc)
 
 
 class TestGetData(unittest.TestCase):
-    @patch('builtins.input', return_value='test0')
+    @patch('builtins.input', return_value=TEST_STRING)
     def test_input_title(self, input):
         """
         Tests if user provided data for title
@@ -52,9 +55,9 @@ class TestGetData(unittest.TestCase):
         :return:
         string
         """
-        self.assertEqual(getTitle(), 'test0')
+        self.assertEqual(getTitle(), TEST_STRING)
 
-    @patch('builtins.input', return_value='test0')
+    @patch('builtins.input', return_value=TEST_STRING)
     def test_input_desc(self, input):
         """
         Tests if user provided data for description
@@ -62,7 +65,17 @@ class TestGetData(unittest.TestCase):
         :return:
         string
         """
-        self.assertEqual(getDesc(), 'test0')
+        self.assertEqual(getDesc(), TEST_STRING)
+
+    @patch('builtins.input', return_value=TEST_ID)
+    def test_input_id(self, input):
+        """
+        Tests if user provided id
+        :param input:
+        :return:
+        string
+        """
+        self.assertEqual(getId(), TEST_ID)
 
 
 class TestAddTask(unittest.TestCase):
@@ -90,9 +103,10 @@ class TestAddTask(unittest.TestCase):
         """
         title_test = 'Test title file'
         desc_test = 'Test description file'
-        id_task = readFile(COUNTER)
-        new_dict = {"0": {"Title": "opjdaspjoao", "Description": "sdaiosdjopdias"},
-                    str(id_task): {"Title": title_test, "Description": desc_test}}
+        id_task = '1'
+        incValue(COUNTER)
+        new_dict = {"0": {"Title": "test0", "Description": "test0"},
+                    id_task: {"Title": title_test, "Description": desc_test}}
         addTodo(title_test, desc_test, FILE, COUNTER)
         help_dict = getJson(FILE)
         result_dict = copy.deepcopy(help_dict)
@@ -127,37 +141,56 @@ class TestShowTodo(unittest.TestCase):
         :return:
         Dict
         """
-        file_dict = {"0": {"Title": "opjdaspjoao", "Description": "sdaiosdjopdias"}}
-        result = showTodo(FILE)
+        file_dict = {"0": {"Title": "test0", "Description": "test0"}}
+        result = getJson(FILE)
         self.assertDictEqual(result, file_dict)
 
 
 class TestEditTodo(unittest.TestCase):
-    @patch('builtins.input', return_value='0')
-    def test_edit_todo(self):
+    @patch('builtins.input', return_value=TEST_ID)
+    def test_edit_task(self, input):
         """
         Test that user can edit specified task
         :return:
         Dict
         """
-        help_dict = getJson(FILE)
-        backup_dict = copy.deepcopy(help_dict)
-        editTodo(FILE)
-        result = getJson(FILE)
-        self.assertDictEqual(result, help_dict)
+        test_title = 'Edit title 1'
+        test_desc = 'Edit desc 1'
+        backup_dict = getJson(FILE)
+        wanted_dict = {"0": {"Title": "Edit title 1", "Description": "Edit desc 1"}}
+        editTodo(test_title, test_desc, FILE)
+        result_dict = getJson(FILE)
+        updateJson(backup_dict, FILE)
+        self.assertEqual(result_dict, wanted_dict)
 
-    @patch('builtins.input', return_value='123123')
-    def test_edit_invalid_id_todo(self, input):
+    @patch('builtins.input', return_value=INVALID_ID)
+    def test_invalid_id_task(self, input):
         """
-        Test that user cant edit record which doesnt exists
+        Test that user cant edit task which doesnt exists
+        :param input:
         :return:
-        0
+        int
         """
-        self.assertEqual(editTodo(), 0)
+        result = editTodo('', '', FILE)
+        self.assertEqual(result, 0)
 
 
 class TestRemoveTodo(unittest.TestCase):
-    def test_remove_invalid_id_todo(self):
+    @patch('builtins.input', return_value=TEST_ID)
+    def test_remove_todo(self, input):
+        """
+        Test that user can remove record
+        :return:
+        Dict
+        """
+        backup_dict = getJson(FILE)
+        removeTodo(FILE)
+        result = getJson(FILE)
+        updateJson(backup_dict, FILE)
+        self.assertDictEqual(result, {})
+
+    @patch('builtins.input', return_value=INVALID_ID)
+    def test_remove_invalid_id_todo(self, input):
         """
         Test that user cant remove record which doesnt exists
         :return:
@@ -165,17 +198,6 @@ class TestRemoveTodo(unittest.TestCase):
         """
         result = removeTodo(FILE)
         self.assertEqual(result, 0)
-
-    def test_remove_todo(self):
-        """
-        Test that user can remove record
-        :return:
-        Dict
-        """
-        help_dict = getJson(DELETED_FILE)
-        removeTodo(FILE)
-        result = getJson(FILE)
-        self.assertDictEqual(result, help_dict)
 
 
 if __name__ == '__main__':

@@ -13,6 +13,11 @@ WRONG = "Something went wrong!"
 
 
 def getTitle():
+    """
+    Gets 'title' from user
+    :return:
+    string
+    """
     title = ''
     while not title and not title.strip():
         title = input("Title: ")
@@ -20,6 +25,11 @@ def getTitle():
 
 
 def getDesc():
+    """
+    Gets 'desc' from user
+    :return:
+    string
+    """
     desc = ''
     while not desc and not desc.strip():
         desc = input("Description: ")
@@ -27,6 +37,11 @@ def getDesc():
 
 
 def getId():
+    """
+    Gets 'id' from user
+    :return:
+    string
+    """
     id_task = ''
     while not id_task and not id_task.strip():
         id_task = input("Task id: ")
@@ -34,6 +49,15 @@ def getId():
 
 
 def addTodo(title=getTitle(), description=getDesc(), path=PATH, path_counter=COUNTER_FILE):
+    """
+    Adds task to the file\n
+    :param title: title of task (optional)
+    :param description: description of task (optional)
+    :param path: directory where data will be saved
+    :param path_counter: directory where id is stored
+    :return:
+    None
+    """
     id_task = counter.readFile(path_counter)
     if os.path.exists(path):
         help_dict = getJson(path)
@@ -49,6 +73,12 @@ def addTodo(title=getTitle(), description=getDesc(), path=PATH, path_counter=COU
 
 
 def removeTodo(path=PATH):
+    """
+    Removes specified task by Id
+    :param path: directory where data is stored
+    :return:
+    None
+    """
     if not checkIfFileExists():
         return 0
     if checkIfFileIsEmpty():
@@ -57,8 +87,8 @@ def removeTodo(path=PATH):
     if not bool(remove_dict):
         print('Dict is empty! You have to insert data!')
         return 0
-    showTodo()
-    task_id = str(input("Which task you want to delete?\n"))
+    showTodo(path)
+    task_id = getId()
     if task_id in remove_dict:
         remove_dict.pop(task_id)
         print(f'Task with ID:{task_id} has been deleted!')
@@ -69,15 +99,23 @@ def removeTodo(path=PATH):
 
 
 def editTodo(title='', desc='', path=PATH):
-    if not checkIfFileExists():
+    """
+    Edits specified task by Id
+    :param title: if left empty, prompts later
+    :param desc: if left empty, prompts later
+    :param path: directory where data is stored
+    :return:
+    None
+    """
+    if not checkIfFileExists(path):
         return 0
-    if checkIfFileIsEmpty():
+    if checkIfFileIsEmpty(path):
         return 0
     update_dict = getJson(path)
     if not bool(update_dict):
         print('Dict is empty! You have to insert data!')
         return 0
-    showTodo()
+    showTodo(path)
     task_id = getId()
     if task_id in update_dict:
         if not bool(title) and not bool(desc):
@@ -91,9 +129,15 @@ def editTodo(title='', desc='', path=PATH):
 
 
 def showTodo(path=PATH):
-    if not checkIfFileExists():
+    """
+    View tasks
+    :param path: directory where data is stored
+    :return:
+    None
+    """
+    if not checkIfFileExists(path):
         return 0
-    if checkIfFileIsEmpty():
+    if checkIfFileIsEmpty(path):
         return 0
     dictionary = getJson(path)
     for key, value in dictionary.items():
@@ -101,10 +145,15 @@ def showTodo(path=PATH):
         for content, content_value in value.items():
             print(f"{content}: {content_value}")
         print("-------------")
-    return dictionary
 
 
 def checkIfFileExists(path=PATH):
+    """
+    Checks if file exists
+    :param path: directory where file is supposed to be stored
+    :return:
+    Bool
+    """
     if os.path.exists(path):
         return True
     print(f'File doesnt exists!')
@@ -112,18 +161,37 @@ def checkIfFileExists(path=PATH):
 
 
 def checkIfFileIsEmpty(path=PATH):
+    """
+    Checks if file is empty
+    :param path: directory where file is stored
+    :return:
+    Bool
+    """
     if os.stat(path).st_size == 0:
+        print(f'{EMPTY_FILE}')
         return True
-    print(f'{EMPTY_FILE}')
     return False
 
 
 def updateJson(helpDict, path=PATH):
+    """
+    Updates .json file with new data
+    :param helpDict: dictionary to be stored in file
+    :param path: directory where file is stored
+    :return:
+    None
+    """
     with open(path, 'w') as pfile:
         json.dump(helpDict, pfile)
 
 
-def getJson(path):
+def getJson(path=PATH):
+    """
+    Reads content of .json file
+    :param path: directory where file is stored
+    :return:
+    Dict
+    """
     if os.stat(path).st_size == 0:
         return {}
     else:

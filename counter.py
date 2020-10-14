@@ -8,7 +8,13 @@ class Counter:
     count = 0
 
 
-def readFile(path):
+def readFile(path=PATH):
+    """
+    Reads value from file or creates file with Counter.counter attr
+    :param path:
+    :return:
+    int
+    """
     if not os.path.exists(path):
         with open(path, 'w') as pfile:
             json.dump(Counter.count, pfile)
@@ -17,7 +23,12 @@ def readFile(path):
     return int(Counter.count)
 
 
-def incValue(path):
+def incValue(path=PATH):
+    """
+    Increments value of Counter.counter by 1
+    :param path:
+    :return:
+    """
     Counter.count += 1
     with open(path, 'w') as pfile:
         json.dump(Counter.count, pfile)
